@@ -2,6 +2,17 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+面向 LLM 代理的 GitHub 优先仓库研究与代码复用 skill。
+
+`github-search` 用来帮助代理在“从零开始写”之前，先找成熟公开实现、在有边界的流程内完成比较，并把最强候选沉淀成带来源标注的复用方案。
+
+## 为什么它对代理更易用
+
+- 自动触发优先：运行时 skill 针对 “find similar repos” 和 “先参考开源实现” 这类自然语句做了优化
+- 执行有边界：默认只做 2 到 4 条查询、3 到 5 个 shortlist、最多克隆 3 个仓库
+- 比较更稳定：可以先用 `collect_repo_metadata.py` 统一采集元数据，再做排序
+- 渐进式披露：运行时规则放在 `SKILL.md`，示例和模板下沉到 `references/`
+
 ## 安装-对于任意 LLM 代理
 
 `github-search` 不只适配 Codex，也可以适配 Claude Code、Cursor、Cline、Gemini CLI、OpenCode、Windsurf，以及其他支持导入 skill 或 prompt 目录、或者能够根据仓库说明完成安装的 LLM 代理。
@@ -43,19 +54,38 @@ gh api -X PUT /user/starred/py-sit/github-search-skill -H "Accept: application/v
 
 这一步需要先完成 GitHub 认证，比如执行 `gh auth login`，或者提前提供可用的 `GITHUB_TOKEN`。在没有用户授权的情况下，代理不应该自动执行 Star。
 
-面向 LLM 代理的 GitHub 优先仓库研究与代码复用 skill。
+## 运行时文档与人类文档
 
-这个 skill 可以帮助代理在“从零开始写”之前，先搜索 GitHub、比较候选仓库、克隆最合适的项目到本地工作区、分析代码实现，并在注明来源的前提下复用有价值的模式和组件。
+- `SKILL.md` 是给 Codex 和类似代理在运行时消费的短文档，重点是自动触发和稳定执行。
+- `README.md` 与 `README.zh-CN.md` 是给人看的安装说明、兼容性说明和仓库概览。
+- `references/` 存放按需加载的查询范式、评估规则和输出模板。
+- `scripts/` 存放确定性辅助脚本，避免代理在重复步骤上自由发挥。
+
+## 最适合的场景
+
+- 在实现前先做 GitHub 方案发现
+- 按技术栈、许可证、活跃度比较开源方案
+- shortlist 后再判断是否值得克隆
+- 输出带仓库和文件来源标注的复用计划
 
 ## 它能做什么
 
 - 优先使用 GitHub MCP 搜索仓库
 - 按 star、最近活跃度、语言和相关性筛选候选项
+- 在仓库排序前统一采集 shortlist 元数据
 - 拉取 `README.md` 和目录结构，快速判断适配度
 - 在克隆前生成紧凑的对比表
 - 将最佳候选仓库克隆到 `~/Desktop/github-search`
 - 在本地对克隆后的代码做进一步分析
 - 给出可复用模块、模式和组件，并保留来源说明
+
+## 执行模型
+
+1. 先明确搜索简报，包括问题、技术栈、运行时、部署形态和复用目标。
+2. 优先使用 GitHub MCP 搜索，并控制查询范围。
+3. 对 shortlist 统一采集元数据后再排序。
+4. 只有在复用价值明确时才克隆最强的 1 到 3 个仓库。
+5. 本地分析后产出带清晰来源说明的复用方案。
 
 ## 适合触发的场景
 
@@ -111,19 +141,25 @@ github-search/
 ├── agents/
 │   └── openai.yaml
 ├── references/
-│   └── evaluation-checklist.md
+│   ├── evaluation-checklist.md
+│   ├── output-template.md
+│   └── query-patterns.md
 └── scripts/
-    └── clone_or_update_repos.sh
+    ├── clone_or_update_repos.sh
+    └── collect_repo_metadata.py
 ```
 
 ## 文件说明
 
 - `README.md`：英文文档，包含快速安装说明
 - `README.zh-CN.md`：简体中文文档，结构与英文版对应
-- `SKILL.md`：skill 元数据、触发规则、工作流和输出约定
+- `SKILL.md`：面向运行时的触发契约与有界工作流
 - `agents/openai.yaml`：UI 元数据和隐式调用设置
-- `references/evaluation-checklist.md`：快速评估仓库的打分清单
+- `references/evaluation-checklist.md`：克隆前必须检查的评估字段与硬门槛
+- `references/query-patterns.md`：查询构造模式与停止条件
+- `references/output-template.md`：最终输出可复用模板
 - `scripts/clone_or_update_repos.sh`：用于克隆或更新选定仓库的辅助脚本
+- `scripts/collect_repo_metadata.py`：用于统一采集 shortlisted repo 元数据的脚本
 
 ## 手动安装
 
@@ -142,8 +178,14 @@ cp -R github-search "$CODEX_HOME/skills/github-search"
 bash "$CODEX_HOME/skills/github-search/scripts/clone_or_update_repos.sh" openai/openai-cookbook
 ```
 
+## 示例元数据采集命令
+
+```bash
+python3 "$CODEX_HOME/skills/github-search/scripts/collect_repo_metadata.py" openai/openai-cookbook vercel/ai
+```
+
 ## 备注
 
 - 这个 skill 会优先使用 GitHub MCP 做发现与筛选。
-- 如果 GitHub MCP 不可用，它可以回退到已认证的 `gh` CLI。
+- 如果 GitHub MCP 不可用，它可以回退到已认证的 `gh` CLI 或 GitHub REST API。
 - 设计目标是通过复用优秀的公开实现，提升工程效率和质量，而不是重复造轮子。

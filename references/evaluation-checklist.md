@@ -1,40 +1,65 @@
 # Repo Evaluation Checklist
 
-Use this rubric when multiple GitHub repos look relevant and you need a sharper ranking.
+Use this rubric before any clone step. Every shortlisted repo must be compared on the same six fields.
+
+## Required comparison fields
+
+- stack fit
+- absolute last activity date
+- license
+- README or examples quality
+- reusable surface
+- coupling or integration risk
+
+Do not write vague labels like `recent` or `active`. Always output the actual date.
+
+## Hard gates
+
+Default to `Reject` or `Reference only` when any of these is true:
+
+- no license
+- last meaningful activity is clearly stale for the target use case and there is no explicit justification
+- toy demo, tutorial-only repo, or mostly generated code
+- wrong stack for the target task
+- strong product, vendor, or platform lock-in that makes reuse unrealistic
+
+For staleness, use the current date when evaluating and explain the risk in plain language.
 
 ## Fast scoring
 
-Score each repo from 1 to 5 on:
+Score each field from 1 to 5:
 
-- Problem fit: Does it solve the same problem or only a nearby one?
-- Maintenance: Is it recently updated and clearly still alive?
-- Extraction value: Can useful modules be reused without importing the whole repo?
-- Code quality: Are structure, naming, tests, and docs good enough to trust?
-- Integration cost: How hard will it be to adapt to the current stack?
-- License safety: Is reuse compatible with the current task?
+- stack fit: same problem and compatible stack, or only adjacent
+- activity: healthy maintenance, or outdated and risky
+- license: clearly reusable, or unclear or restrictive
+- docs quality: README, setup, and examples are trustworthy, or thin
+- reusable surface: isolated modules or patterns exist, or code is monolithic
+- integration risk: adaptation cost is low, or coupling is high
 
-## Strong signals
+## Signals
 
-- Clear README with setup, architecture, and examples
-- Recent commits or releases
-- Tests, examples, or demo apps
-- Modular structure with obvious reusable boundaries
-- Popularity that matches the niche; small niches do not always need huge stars
+Strong signals:
 
-## Weak signals
+- clear README with setup, architecture, and examples
+- recent commits or releases
+- tests, examples, or demo apps
+- modular structure with obvious reusable boundaries
+- popularity that makes sense for the niche
 
-- Mostly screenshots with little code
-- Last meaningful update is very old
-- No license or unclear license
-- Monolithic code with poor separation
-- Heavy vendor coupling or hidden hosted dependencies
-- Generated or copied code with little explanation
+Weak signals:
 
-## Reuse recommendation labels
+- screenshots with little code
+- very old last meaningful update
+- no license or unclear license
+- monolithic structure with poor separation
+- heavy vendor coupling or hidden hosted dependencies
+- large amounts of generated code without explanation
 
-Use one of these labels in your summary:
+## Recommendation labels
 
-- Direct dependency: Good candidate to add as a package or service dependency
-- Partial reuse: Good source for isolated modules, prompts, schemas, or patterns
-- Reference only: Useful for ideas or architecture, not for direct code reuse
-- Reject: Not worth cloning or reusing
+Use one of these labels in the final summary:
+
+- `Direct dependency`
+- `Partial reuse`
+- `Reference only`
+- `Reject`

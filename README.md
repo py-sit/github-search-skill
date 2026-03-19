@@ -2,6 +2,17 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+GitHub-first repository research and code reuse skill for LLM agents.
+
+`github-search` helps an agent find strong public implementations before building from scratch, compare them with bounded steps, and turn the best candidates into a reuse plan with source attribution.
+
+## Why It Is Easy for Agents to Use
+
+- Auto-trigger oriented: the runtime skill is written to trigger from natural requests like "find similar repos" and "先参考开源实现"
+- Bounded execution: it defaults to 2-4 query variants, 3-5 shortlisted repos, and at most 3 clones
+- Deterministic comparison: shortlisted repos can be normalized with `collect_repo_metadata.py` before ranking
+- Progressive disclosure: runtime rules stay in `SKILL.md`, while examples and templates live in `references/`
+
 ## Quick Install for Any LLM Agent
 
 `github-search` is not limited to Codex. It can also be adapted for Claude Code, Cursor, Cline, Gemini CLI, OpenCode, Windsurf, and other LLM agents that can import a skill or prompt folder, or follow repository-based installation instructions.
@@ -43,19 +54,38 @@ If your agent is connected to the official GitHub MCP Server, it can also use th
 
 This requires an authenticated GitHub session first, such as `gh auth login`, or a valid `GITHUB_TOKEN`. Without user authorization, an agent should not attempt to star the repository automatically.
 
-GitHub-first repository research and code reuse skill for LLM agents.
+## Runtime vs Human Docs
 
-This skill helps an agent search GitHub before building from scratch, compare promising repositories, clone the best candidates into a local workspace, inspect the cloned code, and reuse useful patterns with source attribution.
+- `SKILL.md` is the runtime contract for Codex and similar agents. It stays short and is optimized for automatic routing and execution.
+- `README.md` and `README.zh-CN.md` are human-facing docs for installation, compatibility notes, and repository overview.
+- `references/` stores on-demand guidance such as query patterns, evaluation gates, and response templates.
+- `scripts/` stores deterministic helpers so the agent does not have to improvise repeated metadata collection or clone logic.
+
+## Best For
+
+- GitHub-based solution discovery before implementation
+- OSS comparison by stack, license, and activity
+- Shortlisted repo inspection before cloning
+- Reuse planning with repo and file attribution
 
 ## What It Does
 
 - Searches GitHub repositories with GitHub MCP first
 - Filters candidates by stars, recent activity, language, and relevance
+- Collects standardized shortlist metadata before ranking repositories
 - Pulls `README.md` and directory structure for quick evaluation
 - Produces a compact comparison table before cloning
 - Clones the top repositories into `~/Desktop/github-search`
 - Performs local code analysis on cloned repositories
 - Recommends reusable modules, patterns, and components with provenance
+
+## Execution Model
+
+1. Define a search brief with the problem, stack, runtime, deployment model, and reuse target.
+2. Search with GitHub MCP first and keep the search bounded.
+3. Collect standardized metadata for the shortlist before ranking.
+4. Clone only the strongest 1-3 candidates when reuse is justified.
+5. Analyze locally and produce a reuse plan with clear attribution.
 
 ## Good Trigger Cases
 
@@ -111,19 +141,25 @@ github-search/
 ├── agents/
 │   └── openai.yaml
 ├── references/
-│   └── evaluation-checklist.md
+│   ├── evaluation-checklist.md
+│   ├── output-template.md
+│   └── query-patterns.md
 └── scripts/
-    └── clone_or_update_repos.sh
+    ├── clone_or_update_repos.sh
+    └── collect_repo_metadata.py
 ```
 
 ## Files
 
 - `README.md`: English documentation with quick-install guidance
 - `README.zh-CN.md`: Simplified Chinese documentation with the same structure
-- `SKILL.md`: Skill metadata, trigger guidance, workflow, and output contract
+- `SKILL.md`: Runtime-facing trigger contract and bounded workflow for Codex-style agents
 - `agents/openai.yaml`: UI metadata and implicit invocation settings
-- `references/evaluation-checklist.md`: Fast rubric for ranking repositories
+- `references/evaluation-checklist.md`: Required evaluation fields and hard gates before cloning
+- `references/query-patterns.md`: Query construction patterns and stop conditions
+- `references/output-template.md`: Reusable response skeleton for final deliverables
 - `scripts/clone_or_update_repos.sh`: Helper script to clone or update selected repositories
+- `scripts/collect_repo_metadata.py`: Deterministic metadata collector for shortlisted repositories
 
 ## Manual Installation
 
@@ -142,8 +178,14 @@ If your agent uses a different skill directory, copy the folder there instead an
 bash "$CODEX_HOME/skills/github-search/scripts/clone_or_update_repos.sh" openai/openai-cookbook
 ```
 
+## Example Metadata Command
+
+```bash
+python3 "$CODEX_HOME/skills/github-search/scripts/collect_repo_metadata.py" openai/openai-cookbook vercel/ai
+```
+
 ## Notes
 
 - This skill prefers GitHub MCP for discovery.
-- If GitHub MCP is unavailable, it may fall back to authenticated `gh` CLI.
+- If GitHub MCP is unavailable, it may fall back to authenticated `gh` CLI or the GitHub REST API.
 - It is designed to improve engineering speed and quality by reusing strong public implementations instead of reinventing common patterns.

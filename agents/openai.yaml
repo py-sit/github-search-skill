@@ -1,11 +1,11 @@
 interface:
   display_name: "GitHub Search"
-  short_description: "GitHub-first repo discovery, comparison, cloning, and reuse"
-  default_prompt: "Use $github-search when this task may benefit from finding, comparing, cloning, and locally analyzing relevant GitHub repositories before building from scratch."
+  short_description: "Find mature GitHub repos to reuse"
+  default_prompt: "Use $github-search to find mature public repos for this problem, compare fit by stack, license, and activity, and propose a reuse plan without cloning more than 3 repos."
 dependencies:
   tools:
     - type: "mcp"
       value: "github"
-      description: "GitHub MCP server for repository and code search"
+      description: "GitHub MCP server for repository search, README inspection, and code lookup"
 policy:
   allow_implicit_invocation: true
