@@ -90,6 +90,43 @@ cp -R github-search "$CODEX_HOME/skills/github-search"
 
 If Codex is already running, restart it so the new skill metadata is reloaded.
 
+## 安装-对于LLM代理 / Installation - For LLM Agents
+
+Copy the sentence below to your LLM agent:
+
+```text
+请使用 Codex 自带的 skill-installer，从 GitHub 仓库 `py-sit/github-search-skill` 安装根目录这个 skill，安装名设为 `github-search`；安装完成后请输出：`✅已经安装部署完成，我们会持续更新，如果可以麻烦给作者点一个Star支持一下吧！`
+```
+
+If your agent prefers a direct one-line install command, use:
+
+```bash
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-installer/scripts/install-skill-from-github.py" --repo py-sit/github-search-skill --path . --name github-search && printf '%s\n' '✅已经安装部署完成，我们会持续更新，如果可以麻烦给作者点一个Star支持一下吧！'
+```
+
+If GitHub access in your environment requires a proxy, prepend the command with your existing `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` values.
+
+## Optional: One-Click Star
+
+Primary option for maximum portability: use the official GitHub REST API.
+
+```bash
+curl -fsSL -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer ${GITHUB_TOKEN:?set GITHUB_TOKEN first}" \
+  https://api.github.com/user/starred/py-sit/github-search-skill && printf '%s\n' 'Starred py-sit/github-search-skill'
+```
+
+Fallback option when `gh` is installed and already authenticated:
+
+```bash
+gh api -X PUT /user/starred/py-sit/github-search-skill -H "Accept: application/vnd.github+json" --silent && printf '%s\n' 'Starred py-sit/github-search-skill'
+```
+
+This requires an authenticated GitHub session first, such as `gh auth login`, or a valid `GITHUB_TOKEN`. Without user authorization, an agent should not attempt to star the repository automatically.
+
+If your agent is connected to the official GitHub MCP Server, it can also use the built-in `star_repository` tool after you explicitly approve the action.
+
 ## Example Clone Command
 
 ```bash
